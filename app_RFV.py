@@ -18,9 +18,9 @@ def carregar_dados():
     else:
         # fallback: carregar arquivo padrão do repositório
         try:
-            df = pd.read_csv('dados_input1.csv', infer_datetime_format=True, parse_dates=['DiaCompra'])
+            df = pd.read_csv('dados_input1_clean.csv', infer_datetime_format=True, parse_dates=['DiaCompra'])
         except FileNotFoundError:
-            st.warning("Nenhum arquivo enviado e 'dados_input1.csv' não encontrado no repositório.")
+            st.warning("Nenhum arquivo enviado e 'dados_input1_clean.csv' não encontrado no repositório.")
             return None
     return df
 
@@ -37,13 +37,17 @@ def gerar_excel(df):
 df_compras = carregar_dados()
 
 if df_compras is not None:
+    # MOSTRAR PRIMEIRAS LINHAS PARA TESTE
+    st.subheader("Visualização inicial dos dados")
+    st.write(df_compras.head())
+
     # Exemplo: criar colunas de quartis RFV (supondo que já tenha Recencia, Frequencia, Valor)
     df_compras['R_quartil'] = pd.qcut(df_compras['Recencia'], 4, labels=[4,3,2,1])
     df_compras['F_quartil'] = pd.qcut(df_compras['Frequencia'], 4, labels=[1,2,3,4])
     df_compras['V_quartil'] = pd.qcut(df_compras['Valor'], 4, labels=[1,2,3,4])
     df_compras['RFV_Score'] = df_compras['R_quartil'].astype(str) + df_compras['F_quartil'].astype(str) + df_compras['V_quartil'].astype(str)
 
-    st.subheader("Tabela RFV")
+    st.subheader("Tabela RFV completa")
     st.dataframe(df_compras)
 
     # Botão de download
@@ -53,6 +57,7 @@ if df_compras is not None:
         file_name='RFV_clientes.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
 
     
 
