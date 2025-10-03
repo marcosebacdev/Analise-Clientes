@@ -15,11 +15,11 @@ if os.path.exists(csv_path):
     st.write("Primeiras linhas do CSV para conferência:")
     df_debug = pd.read_csv(csv_path)
     st.dataframe(df_debug.head())
-    # Mostrar todas as colunas para conferência
     st.write("Colunas do CSV:", df_debug.columns.tolist())
 else:
     st.error(f"Arquivo NÃO encontrado: {csv_path}")
     st.stop()  # Para o app aqui se o arquivo não existir
+
 # =================== Fim do Bloco de Debug ===================
 
 from io import BytesIO
@@ -62,28 +62,43 @@ if df_compras is not None:
     st.subheader("Visualização inicial dos dados")
     st.write(df_compras.head())
 
-    # Ajustar nomes das colunas conforme CSV
-    # Substitua se os nomes forem diferentes!
-    r_col = 'Recência'     # exemplo do CSV
-    f_col = 'Frequencia'
-    v_col = 'Valor'
+    # ===== Cálculo RFV adaptado =====
+    import datetime as dt
 
-    # Exemplo: criar colunas de quartis RFV
-    df_compras['R_quartil'] = pd.qcut(df_compras[r_col], 4, labels=[4,3,2,1])
-    df_compras['F_quartil'] = pd.qcut(df_compras[f_col], 4, labels=[1,2,3,4])
-    df_compras['V_quartil'] = pd.qcut(df_compras[v_col], 4, labels=[1,2,3,4])
-    df_compras['RFV_Score'] = df_compras['R_quartil'].astype(str) + df_compras['F_quartil'].astype(str) + df_compras['V_quartil'].astype(str)
+    # Recência: dias desde a última compra
+    df_compras['DiaCompra'] = pd.to_datetime(df_compras['DiaCompra'])
+    ultima_data = df_compras['DiaCompra'].max()
+    recencia_df = df_compras.groupby('ID_cliente')['DiaCompra'].max().reset_index()
+    recencia_df['Recencia'] = (ultima_data - recencia_df['DiaCompra']).dt.days
+
+    # Frequência: número de compras
+    frequencia_df = df_compras.groupby('ID_cliente')['CodigoCompra'].count().reset_index()
+    frequencia_df.rename(columns={'CodigoCompra':'Frequencia'}, inplace=True)
+
+    # Valor: total gasto
+    valor_df = df_compras.groupby('ID_cliente')['ValorTotal'].sum().reset_index()
+    valor_df.rename(columns={'ValorTotal':'Valor'}, inplace=True)
+
+    # Juntar tudo
+    df_rfv = recencia_df.merge(frequencia_df, on='ID_cliente').merge(valor_df, on='ID_cliente')
+
+    # Quartis RFV
+    df_rfv['R_quartil'] = pd.qcut(df_rfv['Recencia'], 4, labels=[4,3,2,1])
+    df_rfv['F_quartil'] = pd.qcut(df_rfv['Frequencia'], 4, labels=[1,2,3,4])
+    df_rfv['V_quartil'] = pd.qcut(df_rfv['Valor'], 4, labels=[1,2,3,4])
+    df_rfv['RFV_Score'] = df_rfv['R_quartil'].astype(str) + df_rfv['F_quartil'].astype(str) + df_rfv['V_quartil'].astype(str)
 
     st.subheader("Tabela RFV completa")
-    st.dataframe(df_compras)
+    st.dataframe(df_rfv)
 
     # Botão de download
     st.download_button(
         label="📥 Download Excel",
-        data=gerar_excel(df_compras),
+        data=gerar_excel(df_rfv),
         file_name='RFV_clientes.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
 
 
 
