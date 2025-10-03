@@ -16,9 +16,9 @@ def carregar_dados():
             st.error(f"Erro ao ler o arquivo enviado: {e}")
             return None
     else:
-        # fallback: carregar arquivo padrão do repositório
+        # fallback: carregar arquivo padrão do repositório dentro da pasta data
         try:
-            df = pd.read_csv('dados_input1_clean.csv', infer_datetime_format=True, parse_dates=['DiaCompra'])
+            df = pd.read_csv('data/dados_input1_clean.csv', infer_datetime_format=True, parse_dates=['DiaCompra'])
         except FileNotFoundError:
             st.warning("Nenhum arquivo enviado e 'dados_input1_clean.csv' não encontrado no repositório.")
             return None
@@ -57,7 +57,6 @@ if df_compras is not None:
         file_name='RFV_clientes.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-
 
     
 
