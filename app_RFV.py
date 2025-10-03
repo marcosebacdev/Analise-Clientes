@@ -1,12 +1,29 @@
 
+# =================== Bloco de Debug ===================
+import os
 import streamlit as st
 import pandas as pd
+
+st.title("Debug: Verificando CSV de fallback")
+
+csv_path = "data/dados_input1_clean.csv"
+
+if os.path.exists(csv_path):
+    st.success(f"Arquivo encontrado: {csv_path}")
+    st.write("Primeiras linhas do CSV para conferência:")
+    df_debug = pd.read_csv(csv_path)
+    st.dataframe(df_debug.head())
+else:
+    st.error(f"Arquivo NÃO encontrado: {csv_path}")
+    st.stop()
+# =================== Fim do Bloco de Debug ===================
+
 from io import BytesIO
 
-# Título do app
 st.title("Análise RFV de Clientes")
 
 # Função para leitura de CSV com fallback
+@st.cache_data
 def carregar_dados():
     data_file_1 = st.sidebar.file_uploader("Bank marketing data", type=['csv','xlsx'])
     if data_file_1 is not None:
@@ -16,7 +33,6 @@ def carregar_dados():
             st.error(f"Erro ao ler o arquivo enviado: {e}")
             return None
     else:
-        # fallback: carregar arquivo padrão do repositório dentro da pasta data
         try:
             df = pd.read_csv('data/dados_input1_clean.csv', infer_datetime_format=True, parse_dates=['DiaCompra'])
         except FileNotFoundError:
@@ -29,7 +45,6 @@ def gerar_excel(df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='RFV')
-        writer.save()
     processed_data = output.getvalue()
     return processed_data
 
@@ -37,11 +52,10 @@ def gerar_excel(df):
 df_compras = carregar_dados()
 
 if df_compras is not None:
-    # MOSTRAR PRIMEIRAS LINHAS PARA TESTE
     st.subheader("Visualização inicial dos dados")
     st.write(df_compras.head())
 
-    # Exemplo: criar colunas de quartis RFV (supondo que já tenha Recencia, Frequencia, Valor)
+    # Cálculo dos quartis RFV
     df_compras['R_quartil'] = pd.qcut(df_compras['Recencia'], 4, labels=[4,3,2,1])
     df_compras['F_quartil'] = pd.qcut(df_compras['Frequencia'], 4, labels=[1,2,3,4])
     df_compras['V_quartil'] = pd.qcut(df_compras['Valor'], 4, labels=[1,2,3,4])
@@ -50,13 +64,13 @@ if df_compras is not None:
     st.subheader("Tabela RFV completa")
     st.dataframe(df_compras)
 
-    # Botão de download
     st.download_button(
         label="📥 Download Excel",
         data=gerar_excel(df_compras),
         file_name='RFV_clientes.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
 
     
 
