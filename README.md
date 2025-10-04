@@ -1,56 +1,21 @@
-# Projeto Análise de Clientes
 
-Este projeto é um **app Streamlit** que realiza a **segmentação de clientes usando RFV** (Recência, Frequência e Valor).  
+   # Análise RFV de Clientes
 
-Ele permite analisar o comportamento de compra dos clientes e criar ações de marketing/CRM direcionadas com base nos clusters formados.
+Aplicação Streamlit que calcula Recência, Frequência e Valor (RFV) por cliente e gera segmentação em quartis.
 
----
-
-## Funcionalidades
-
-- Calcular **Recência (R)**: dias desde a última compra.  
-- Calcular **Frequência (F)**: total de compras realizadas.  
-- Calcular **Valor (V)**: total gasto no período.  
-- Criar a tabela **RFV final** com classificação em quartis: A, B, C, D.  
-- Sugerir **ações de marketing/CRM** de acordo com o perfil do cliente.  
-- **Download** do resultado em Excel.
-
----
+URL pública da aplicação:
+https://analise-clientes.onrender.com
 
 ## Como usar
+1. Abra a aplicação no link acima.
+2. No menu lateral, envie um arquivo CSV com as colunas **ID_cliente**, **CodigoCompra**, **DiaCompra** e **ValorTotal**, ou deixe que a aplicação use o arquivo de fallback (`data/dados_input1_clean.csv`).
+   - Formato esperado:
+     - `ID_cliente` (identificador do cliente)
+     - `CodigoCompra` (identificador da transação)
+     - `DiaCompra` (data da compra, ex.: 2021-12-07)
+     - `ValorTotal` (valor da compra)
+3. A aplicação exibirá a tabela RFV e permitirá o download do resultado em Excel (`RFV_clientes.xlsx`).
 
-1. Certifique-se de ter o **Python 3.12** instalado.  
-2. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
-
-
-3. Execute o app Streamlit:
-   ```bash
-   streamlit run app_RFV.py
-   
-Na barra lateral, suba o arquivo CSV (dados_input1.csv).
-Visualize as tabelas e segmentos de clientes.
-Baixe o resultado em Excel se desejar.
-
-
-Requisitos :
-
-Python 3.12
-Streamlit
-Pandas
-Numpy
-XlsxWriter
-Pillow
-
-
-Observações :
-
-O app utiliza quartis para segmentar os clientes, sendo que:
-
-Melhor quartil: A
-Segundo melhor: B
-Terceiro: C
-Pior: D
-
-A segmentação ajuda a criar estratégias de marketing direcionadas e retenção de clientes.
+## Observações
+- O app gera 3 quartis (R_quartil, F_quartil, V_quartil) e um RFV_Score concatenando os três.
+- O processamento lida com empates e casos de distribuição não uniforme usando uma função segura (`safe_qcut`).
